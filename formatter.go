@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"time"
 )
 
 type logMessage struct {
 	AppName   interface{} `json:"appName,omitempty"`
+	Caller    interface{} `json:"caller,omitempty"`
 	Timestamp interface{} `json:"timestamp,omitempty"`
 	Level     interface{} `json:"level,omitempty"`
 	Message   interface{} `json:"message,omitempty"`
@@ -32,10 +34,20 @@ func (s jsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		TraceId:   entry.Data["traceID"],
 		SpanId:    entry.Data["spanID"],
 		ParentId:  entry.Data["parentID"],
-		Host:      entry.Data["host"],
-		Ip:        entry.Data["ip"],
-		AppName:   entry.Data["appName"],
 	}
+	if _hostname != "" {
+		msg.Host = _hostname
+	}
+	if _ipaddr != "" {
+		msg.Ip = _ipaddr
+	}
+	if _appName != "" {
+		msg.AppName = _appName
+	}
+	if _options.Caller {
+		msg.Caller = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
+	}
+
 	m, _ := json.Marshal(msg)
 	m = append(m, '\n')
 	return m, nil
@@ -44,9 +56,15 @@ func (s jsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 type stdoutFormatter struct{}
 
 func (s stdoutFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var msg string
 	_level := fmt.Sprintf("%s", entry.Level.String())
 	_timeStr := time.Now().Format("2006-01-02T15:04:05.999+0800")
-	msg := fmt.Sprintf("%-24s %-9s %-8s\n", _timeStr, strings.ToUpper(_level), entry.Message)
+	msg = fmt.Sprintf("%-30s %-9s %-8s\n", _timeStr, strings.ToUpper(_level), entry.Message)
+	if _options.Caller {
+		_caller := entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
+		msg = fmt.Sprintf("%-30s %-9s %s   %s\n", _timeStr, strings.ToUpper(_level), _caller, entry.Message)
+	}
+
 	return []byte(msg), nil
 }
 
@@ -61,9 +79,18 @@ func (s kafkaFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		TraceId:   entry.Data["traceID"],
 		SpanId:    entry.Data["spanID"],
 		ParentId:  entry.Data["parentID"],
-		Host:      entry.Data["host"],
-		Ip:        entry.Data["ip"],
-		AppName:   entry.Data["appName"],
+	}
+	if _hostname != "" {
+		msg.Host = _hostname
+	}
+	if _ipaddr != "" {
+		msg.Ip = _ipaddr
+	}
+	if _appName != "" {
+		msg.AppName = _appName
+	}
+	if _options.Caller {
+		msg.Caller = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
 	}
 	m, _ := json.Marshal(msg)
 	err := _kafka.SendSingleTopicMessage("log", m)
