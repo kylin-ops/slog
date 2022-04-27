@@ -36,7 +36,7 @@ type Options struct {
 	// 定义日志路径
 	Path string `yaml:"path" json:"path"`
 	// 定义输出到文件的日志是否为json格式
-	Json bool `yaml:"format" json:"format"`
+	Json bool `yaml:"json" json:"json"`
 	// 定义日志滚动时间(天)
 	RollTime int `yaml:"roll_time" json:"roll_time"`
 	// 定义日志保存数量
