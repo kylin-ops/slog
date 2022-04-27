@@ -1,4 +1,4 @@
-package logger
+package slog
 
 import (
 	"github.com/rifflock/lfshook"
