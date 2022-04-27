@@ -11,7 +11,7 @@ import (
 
 type logMessage struct {
 	AppName   interface{} `json:"appName,omitempty"`
-	Caller    interface{} `json:"caller,omitempty"`
+	Class    interface{} `json:"class,omitempty"`
 	Timestamp interface{} `json:"timestamp,omitempty"`
 	Level     interface{} `json:"level,omitempty"`
 	Message   interface{} `json:"message,omitempty"`
@@ -45,7 +45,7 @@ func (s jsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		msg.AppName = _appName
 	}
 	if _options.Caller {
-		msg.Caller = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
+		msg.Class = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
 	}
 
 	m, _ := json.Marshal(msg)
@@ -90,7 +90,7 @@ func (s kafkaFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		msg.AppName = _appName
 	}
 	if _options.Caller {
-		msg.Caller = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
+		msg.Class = entry.Caller.File + ":" + entry.Caller.Function + ":" + strconv.Itoa(entry.Caller.Line)
 	}
 	m, _ := json.Marshal(msg)
 	err := _kafka.SendSingleTopicMessage("log", m)
